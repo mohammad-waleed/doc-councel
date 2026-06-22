@@ -1,4 +1,4 @@
-# doc-councel
+# doc-counsel
 DocCounsel is an AI-powered legal document assistant built on 
 Retrieval-Augmented Generation (RAG). It allows freelancers, 
 small business owners, and startup founders to upload legal 
