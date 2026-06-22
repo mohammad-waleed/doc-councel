@@ -1,0 +1,26 @@
+# Web Framework
+fastapi
+uvicorn[standard]
+
+# LangChain
+langchain
+langchain-community
+langchain-core
+
+# PDF Processing
+pypdf
+pdfplumber
+
+# Vector Database
+chromadb
+
+# Embeddings
+sentence-transformers
+
+# Utilities
+python-dotenv
+pydantic
+requests
+
+# UI
+streamlit
