@@ -3,38 +3,39 @@ loader.py
 Responsible for loading and extracting raw text from uploaded
 PDF documents using PyPDFLoader and pdfplumber.
 """
-from pathlib import Path
+import io
 # pyrefly: ignore [missing-import]
-from langchain_community.document_loaders import PyPDFLoader
+from pypdf import PdfReader
+# pyrefly: ignore [missing-import]
+from langchain_core.documents import Document
 
-from backend.core.config import settings
-
-# Storage directory
-STORAGE_DIR = Path(settings.STORAGE_DIR)
-
-def load_pdf_document(filename: str):
+def load_pdf_document(file_content: bytes, filename: str):
     """
-    Loads a PDF document from the storage directory using PyPDFLoader.
+    Loads a PDF document directly from memory (bytes) without saving to disk.
     
     Args:
-        filename (str): The name of the PDF file (e.g., 'document.pdf').
+        file_content (bytes): The binary content of the PDF.
+        filename (str): The name of the file (for metadata).
         
     Returns:
         List[Document]: A list of LangChain Document objects containing the text and metadata.
     """
-    file_path = STORAGE_DIR / filename
+    # Read the PDF from bytes in memory
+    reader = PdfReader(io.BytesIO(file_content))
+    documents = []
     
-    # Check if the file exists
-    if not file_path.exists():
-        raise FileNotFoundError(f"The file {filename} does not exist in the storage directory.")
+    for i, page in enumerate(reader.pages):
+        text = page.extract_text()
+        if text:
+            # Create a LangChain Document for each page
+            documents.append(
+                Document(
+                    page_content=text,
+                    metadata={"source": filename, "page": i}
+                )
+            )
+            
+    if not documents:
+        raise ValueError(f"The file {filename} contains no extractable text.")
         
-    # Ensure it's a PDF format
-    if file_path.suffix.lower() != '.pdf':
-        raise ValueError(f"The file {filename} is not a PDF document.")
-        
-    # Initialize the PyPDFLoader with the file path
-    loader = PyPDFLoader(str(file_path))
-    
-    # Load and return the documents (pages)
-    documents = loader.load()
     return documents
