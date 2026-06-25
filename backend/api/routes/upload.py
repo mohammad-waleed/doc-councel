@@ -4,14 +4,14 @@ API routes for uploading legal documents, extracting raw content,
 chunking, embedding, and storing in ChromaDB.
 """
 import os
-from pathlib import Path
 from fastapi import APIRouter, UploadFile, File, HTTPException, status
+from backend.core.config import settings
+from backend.rag.pipeline import ingest_document
 
 router = APIRouter()
 
-MAX_FILE_SIZE = 10 * 1024 * 1024  # 10 MB
-STORAGE_DIR = Path("backend/storage")
-STORAGE_DIR.mkdir(parents=True, exist_ok=True)
+MAX_FILE_SIZE = settings.MAX_FILE_SIZE
+
 
 
 @router.post("/upload_document")
@@ -43,17 +43,19 @@ async def upload_document(file: UploadFile = File(...)):
             detail="File size exceeds the 10 MB limit."
         )
     
-    # Reset the file pointer if it needs to be read again in further processing
-    await file.seek(0)
-    
-    # 4. Save the file to the storage directory
-    file_path = STORAGE_DIR / file.filename
-    with open(file_path, "wb") as f:
-        f.write(file_content)
+    # 4. Ingest the document directly from memory
+    try:
+        chunks_stored = ingest_document(file_content, file.filename)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"File uploaded but ingestion failed: {str(e)}"
+        )
     
     return {
         "filename": file.filename,
-        "message": "Document uploaded and saved successfully",
+        "message": "Document uploaded and ingested successfully (memory-only)",
         "size_bytes": len(file_content),
-        "saved_path": str(file_path)
+        "chunks_stored": chunks_stored
     }
+
