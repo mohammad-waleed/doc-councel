@@ -4,22 +4,20 @@ Responsible for initializing and running the FastAPI backend server,
 setting up middleware, and mounting API routers.
 """
 
-
 from fastapi import FastAPI
-from pydantic import BaseModel
-
-app = FastAPI(title="DocCounsel API")
 
 
-class UserResponse(BaseModel):
-    status: str
-    message: str
+from backend.api.routes.upload import router as upload_router
+from backend.api.routes.chat import router as chat_router
+from tests.test_rag import router as test_rag_router
+
+from backend.core.config import settings
+
+app = FastAPI(title=settings.APP_TITLE)
 
 
-@app.get("/health", response_model=UserResponse)
-def health(name: str = "User"):
-    """Health check — accepts an optional name and returns status and message."""
-    return UserResponse(
-        status="ok",
-        message=f"Hello {name}, DocCounsel API is running successfully.",
-    )
+app.include_router(upload_router)
+app.include_router(chat_router)
+
+
+
