@@ -12,19 +12,20 @@ from backend.rag.llm_model import get_llm
 from backend.database.chroma import get_collection
 
 
-def ingest_document(filename: str) -> int:
+def ingest_document(file_content: bytes, filename: str) -> int:
     """
-    Ingestion pipeline: loads a PDF, chunks it, embeds it, and stores
+    Ingestion pipeline: loads a PDF from memory, chunks it, embeds it, and stores
     the vectors in ChromaDB.
 
     Args:
-        filename (str): The PDF filename in backend/storage/.
+        file_content (bytes): The PDF binary content.
+        filename (str): The PDF filename (for metadata).
 
     Returns:
         int: The number of chunks stored.
     """
-    # 1. Load the PDF
-    documents = load_pdf_document(filename)
+    # 1. Load the PDF directly from memory
+    documents = load_pdf_document(file_content, filename) 
 
     # 2. Split into chunks
     chunks = split_documents(documents)
